@@ -93,7 +93,11 @@ int main(int argc, char *argv[])
             return EXIT_SUCCESS;
         case 'd':
             puts("debug mode enabled");
-            libusb_set_debug(NULL, LIBUSB_LOG_LEVEL_DEBUG);
+            #if LIBUSB_API_VERSION >= 0x01000106
+                libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
+            #else
+                libusb_set_debug(NULL, LIBUSB_LOG_LEVEL_DEBUG);
+            #endif
             break;
         case 'i':
             config->interface = optarg;
