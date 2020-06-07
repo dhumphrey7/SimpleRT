@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     while ((rc = getopt (argc, argv, "hdi:n:")) != -1) {
         switch (rc) {
         case 'h':
-            printf("usage: sudo %s [-h] [-i interface] [-n nameserver|\"local\" ]\n"
+            printf("usage: sudo %s [-h] [-i interface|\"all\"] [-n nameserver|\"local\" ]\n"
                     "default params: -i %s -n %s\n",
                     argv[0],
                     config->interface,

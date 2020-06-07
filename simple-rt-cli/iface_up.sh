@@ -23,7 +23,10 @@ TUNNEL_NET=$4
 HOST_ADDR=$5
 TUNNEL_CIDR=$6
 NAMESERVER=$7
-LOCAL_INTERFACE=$8
+LOCAL_INTERFACES=$8
+if [ "$LOCAL_INTERFACES" = "all" ]; then
+    LOCAL_INTERFACES=$(ifconfig -a | sed -E 's/[[:space:]:].*//;/^$/d' | grep -xv "lo" | grep -xv "lo0" | grep -xv "$TUN_DEV")
+fi
 shift
 
 set -e
@@ -34,7 +37,9 @@ function linux_start {
     ifconfig $TUN_DEV $HOST_ADDR/$TUNNEL_CIDR up
     sysctl -w net.ipv4.ip_forward=1 > /dev/null
     iptables -I FORWARD -j ACCEPT -m comment --comment "${comment}"
-    iptables -t nat -I POSTROUTING -s $TUNNEL_NET/$TUNNEL_CIDR -o $LOCAL_INTERFACE -j MASQUERADE -m comment --comment "${comment}"
+    for IFACE in $LOCAL_INTERFACES; do
+        iptables -t nat -I POSTROUTING -s $TUNNEL_NET/$TUNNEL_CIDR -o $IFACE -j MASQUERADE -m comment --comment "${comment}"
+    done
 }
 
 function linux_stop {
@@ -45,7 +50,9 @@ function osx_start {
     ifconfig $TUN_DEV $HOST_ADDR 10.1.1.2 netmask 255.255.255.0 up
     route add -net $TUNNEL_NET $HOST_ADDR
     sysctl -w net.inet.ip.forwarding=1
-    echo "nat on $LOCAL_INTERFACE from $TUNNEL_NET/$TUNNEL_CIDR to any -> ($LOCAL_INTERFACE)" > /tmp/nat_rules_rt
+    for IFACE in $LOCAL_INTERFACES; do
+        echo "nat on $IFACE from $TUNNEL_NET/$TUNNEL_CIDR to any -> ($IFACE)" > /tmp/nat_rules_rt
+    done
 
     # disable pf
     pfctl -qd 2>&1 > /dev/null || true
@@ -66,19 +73,22 @@ function osx_stop {
 
 if [ "$ACTION" = "start" ]; then
     echo configuring:
-    echo local interface:       $LOCAL_INTERFACE
+    echo ========================================
+    echo out interfaces:        $LOCAL_INTERFACES
     echo virtual interface:     $TUN_DEV
-    echo network:               $TUNNEL_NET
-    echo address:               $HOST_ADDR
-    echo netmask:               $TUNNEL_CIDR
+    echo network:               $TUNNEL_NET/$TUNNEL_CIDR
+    echo host address:          $HOST_ADDR
     echo nameserver:            $NAMESERVER
+    echo ========================================
 fi
 
-ifconfig $LOCAL_INTERFACE > /dev/null
-if [ ! $? -eq 0 ]; then
-    echo Supply valid local interface!
-    exit 1
-fi
+for IFACE in $LOCAL_INTERFACES; do
+    ifconfig $IFACE > /dev/null
+    if [ ! $? -eq 0 ]; then
+        echo Supply valid local interface!
+        exit 1
+    fi
+done
 
 cmd="$PLATFORM-$ACTION"
 

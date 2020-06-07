@@ -19,7 +19,7 @@
 #include "utils.h"
 
 static simple_rt_config_t simple_rt_config = {
-    .interface = "eth0",
+    .interface = "all",
     .nameserver = DEFAULT_NAMESERVER,
 };
 

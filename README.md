@@ -17,8 +17,8 @@ IMPORTANT!
 ```
 FIRST RUN: check out -h option!
    simple-rt -h
-   usage: sudo ./simple-rt [-h] [-i interface] [-n nameserver|"local" ]
-   default params: -i eth0 -n 8.8.8.8
+   usage: sudo ./simple-rt [-h] [-i interface|"all"] [-n nameserver|"local" ]
+   default params: -i all -n 8.8.8.8
 ```
 
 ### No root, no adb required!
