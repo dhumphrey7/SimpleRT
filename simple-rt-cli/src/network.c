@@ -227,10 +227,17 @@ char *fill_serial_param(char *buf, size_t size, accessory_id_t id)
 {
     simple_rt_config_t *config = get_simple_rt_config();
     uint32_t addr = htonl(SIMPLERT_NETWORK_ADDRESS | id);
+    uint32_t host_addr = htonl(SIMPLERT_NETWORK_ADDRESS | 0x1);
+    char nameserver[32] = { 0 };
+
+    snprintf(nameserver, sizeof(nameserver), "%s", config->nameserver);
+    if (strstr(nameserver, "127.") == nameserver) {
+        snprintf(nameserver, sizeof(nameserver), "%s", inet_ntoa(*(struct in_addr *) &host_addr));
+    }
 
     snprintf(buf, size, "%s,%s",
             inet_ntoa(*(struct in_addr *) &addr),
-            config->nameserver);
+            nameserver);
 
     return buf;
 }

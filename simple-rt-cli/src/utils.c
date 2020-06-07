@@ -20,7 +20,7 @@
 
 static simple_rt_config_t simple_rt_config = {
     .interface = "all",
-    .nameserver = DEFAULT_NAMESERVER,
+    .nameserver = "local",
 };
 
 simple_rt_config_t *get_simple_rt_config(void)

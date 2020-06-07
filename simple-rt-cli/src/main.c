@@ -103,17 +103,18 @@ int main(int argc, char *argv[])
             config->interface = optarg;
             break;
         case 'n':
-            if (!strcmp(optarg, "local")) {
-                config->nameserver = get_system_nameserver();
-            } else {
-                config->nameserver = optarg;
-            }
+            config->nameserver = optarg;
             break;
         case '?':
         default:
             return EXIT_FAILURE;
         }
     }
+
+    if (!strcmp(config->nameserver, "local")) {
+        config->nameserver = get_system_nameserver();
+    }
+
 
     if (is_instance_already_running()) {
         fprintf(stderr, "One instance of SimpleRT is already running!\n");

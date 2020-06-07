@@ -23,6 +23,7 @@ TUNNEL_NET=$4
 HOST_ADDR=$5
 TUNNEL_CIDR=$6
 NAMESERVER=$7
+NAMESERVER_IS_LOCALHOST=$([[ "$NAMESERVER" =~ ^127\. ]] && echo 1 || echo 0)
 LOCAL_INTERFACES=$8
 if [ "$LOCAL_INTERFACES" = "all" ]; then
     LOCAL_INTERFACES=$(ifconfig -a | sed -E 's/[[:space:]:].*//;/^$/d' | grep -xv "lo" | grep -xv "lo0" | grep -xv "$TUN_DEV")
@@ -33,6 +34,20 @@ set -e
 
 comment="simple_rt"
 
+
+function nameserver_proxy {
+    if [ "$NAMESERVER_IS_LOCALHOST" = "1" ]; then
+        if [ ! -x "$(command -v socat)" ]; then
+            echo "[ERROR] Program socat not found. Install it or specify public NS server with -n option."
+            exit 1
+        fi
+
+        socat UDP-LISTEN:53,fork,reuseaddr,ignoreeof,bind=$HOST_ADDR UDP:$NAMESERVER:53 &
+        SOCAT_PID=$!
+        echo "Socat started, PID is $SOCAT_PID, proxying $HOST_ADDR:53 => $NAMESERVER:53"
+    fi
+}
+
 function linux_start {
     ifconfig $TUN_DEV $HOST_ADDR/$TUNNEL_CIDR up
     sysctl -w net.ipv4.ip_forward=1 > /dev/null
@@ -40,6 +55,8 @@ function linux_start {
     for IFACE in $LOCAL_INTERFACES; do
         iptables -t nat -I POSTROUTING -s $TUNNEL_NET/$TUNNEL_CIDR -o $IFACE -j MASQUERADE -m comment --comment "${comment}"
     done
+
+    nameserver_proxy
 }
 
 function linux_stop {
@@ -60,6 +77,8 @@ function osx_start {
 
     # enable pf with simplert rules
     pfctl -qf /tmp/nat_rules_rt -e
+
+    nameserver_proxy
 }
 
 function osx_stop {
@@ -78,7 +97,7 @@ if [ "$ACTION" = "start" ]; then
     echo virtual interface:     $TUN_DEV
     echo network:               $TUNNEL_NET/$TUNNEL_CIDR
     echo host address:          $HOST_ADDR
-    echo nameserver:            $NAMESERVER
+    echo nameserver:            $([ "$NAMESERVER_IS_LOCALHOST" = "1" ] && echo "$HOST_ADDR (proxying to $NAMESERVER)" || echo $NAMESERVER)
     echo ========================================
 fi
 
