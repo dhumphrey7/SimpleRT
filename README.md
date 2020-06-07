@@ -1,8 +1,42 @@
 # SimpleRT
 Reverse [Tethering](https://en.wikipedia.org/wiki/Tethering) utility for Android.
 
-Allows you to share your computer's internet connection with your Android device via a USB cable.
+Allows you to share your computer's internet connection with your Android device via a USB cable. **No root, no adb required!** Full Linux and macOS support!
 
+## TL;DR
+### Installation
+* At your android device
+  * Download apk file of latest release at the Github releases tab.
+  * Install downloaded apk
+* At your Linux/MacOS desktop
+  * Ensure that those packages are installed on you system (needed for compilation)
+    * gcc
+    * pkg-config
+    * libusb-1.0 development package
+  * Install `libusb` (libusb-1.0 development package)
+  * Download zip archive of latest release at the Github releases tab.
+  * Unpack zip to current directory
+  * Open SimpleRT directory in console and run:
+    ```
+    cd simple-rt-cli
+    make
+    sudo make install
+    ```
+  * Install `socat` (if you want to use default nameserver at localhost)
+### Usage
+* At your Linux/MacOS computer run in console
+  ```sh
+  sudo simple-rt
+  ```
+* Connect your android device via USB
+* Wait 10 seconds
+* If it is the first usage, you will see popup message from SimpleRT:
+  * Set checkbox "Use by default for this USB accessory"
+  * Press "OK" button
+* Enjoy
+
+
+## Detailed informaton
 Development is still in progress, bugs and errors can occur.
 
 ```
@@ -20,10 +54,6 @@ FIRST RUN: check out -h option!
    usage: sudo ./simple-rt [-h] [-i interface|"all"] [-n nameserver|"local" ]
    default params: -i all -n 8.8.8.8
 ```
-
-### No root, no adb required!
-
-## Full Linux and macOS support! Windows version is in early researching.
 
    Current version features:
    - Multi-tether. You can connect several android devices into one virtual network!
@@ -50,8 +80,7 @@ Create local.properties file in root dir, it should be looking like that:
    ```
    app/build/outputs/apk/app-debug.apk is your apk.
 
-   A prebuilt apk can also be found under `Downloads` at the [Github releases](https://github.com/iteratec/SimpleRT/releases)
-   tab.
+   A prebuilt apk can also be found under `Downloads` at the Github releases tab.
 
 - Desktop part:
 
